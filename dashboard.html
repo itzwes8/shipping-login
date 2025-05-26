@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard - Shipping App</title>
+  <style>
+    body { font-family: sans-serif; margin: 40px auto; max-width: 800px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    #logout { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h2>Your Packages</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Tracking #</th>
+        <th>Merchant</th>
+        <th>Status</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody id="package-table-body">
+      <tr><td colspan="4">Loading...</td></tr>
+    </tbody>
+  </table>
+  <button id="logout">Log Out</button>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const supabase = createClient(
+      'https://ggogevnzmukktcsgniyk.supabase.co',
+      'HSeIAtUsKybGsA4C7XiNKhry0tlgaXhdG_0AY8gLYxM'
+    );
+
+    const tbody = document.getElementById("package-table-body");
+
+    async function loadPackages() {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData?.session?.user;
+
+      if (!user) {
+        tbody.innerHTML = "<tr><td colspan='4'>You must be logged in.</td></tr>";
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('packages')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error || !data.length) {
+        tbody.innerHTML = "<tr><td colspan='4'>No packages found.</td></tr>";
+        return;
+      }
+
+      tbody.innerHTML = "";
+      data.forEach(pkg => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${pkg.tracking_number}</td>
+          <td>${pkg.merchant}</td>
+          <td>${pkg.status}</td>
+          <td>${new Date(pkg.created_at).toLocaleDateString()}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    loadPackages();
+
+    document.getElementById("logout").addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      window.location.href = "index.html";
+    });
+  </script>
+</body>
+</html>

@@ -1,83 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Shipping Login</title>
+  <title>Login - Shipping App</title>
   <style>
     body { font-family: sans-serif; max-width: 400px; margin: 40px auto; }
     input, button { display: block; width: 100%; margin-bottom: 10px; padding: 8px; }
-    ul { padding-left: 20px; }
   </style>
 </head>
 <body>
-  <h2>Login to Track Packages</h2>
+  <h2>Login to Your Account</h2>
   <input id="email" type="email" placeholder="Email" />
   <input id="password" type="password" placeholder="Password" />
   <button id="login-button">Log In</button>
-  <p id="message"></p>
-
-  <div id="packages-section" style="display:none;">
-    <h3>Your Packages</h3>
-    <ul id="packages"></ul>
-  </div>
+  <p id="message" style="color:red;"></p>
 
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
     const supabase = createClient(
       'https://ggogevnzmukktcsgniyk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdnb2dldm56bXVra3Rjc2duaXlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyMjExNTksImV4cCI6MjA2Mzc5NzE1OX0.HSeIAtUsKybGsA4C7XiNKhry0tlgaXhdG_0AY8gLYxM'
+      'HSeIAtUsKybGsA4C7XiNKhry0tlgaXhdG_0AY8gLYxM'
     );
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const loginBtn = document.getElementById('login-button');
-      loginBtn.addEventListener('click', login);
-    });
+    document.getElementById("login-button").addEventListener("click", login);
 
     async function login() {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
+      const message = document.getElementById('message');
 
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       console.log("Login result:", data, error);
 
       if (error) {
-        document.getElementById('message').innerText = 'Login failed: ' + error.message;
-        alert("Login failed: " + error.message);
+        if (error.message.includes("Invalid login credentials")) {
+          message.innerText = "Account not found or incorrect password.";
+        } else {
+          message.innerText = "Login failed: " + error.message;
+        }
         return;
       }
 
-      document.getElementById('message').innerText = 'Login successful!';
-      fetchPackages();
-    }
-
-    async function fetchPackages() {
-      const sessionResponse = await supabase.auth.getSession();
-      const user = sessionResponse.data.session?.user;
-
-      if (!user) {
-        alert("User session not found");
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('packages')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        alert('Could not load packages: ' + error.message);
-        return;
-      }
-
-      document.getElementById('packages-section').style.display = 'block';
-      const list = document.getElementById('packages');
-      list.innerHTML = '';
-      data.forEach(pkg => {
-        const li = document.createElement('li');
-        li.innerText = `${pkg.tracking_number} – ${pkg.merchant} – ${pkg.status} – ${new Date(pkg.created_at).toLocaleDateString()}`;
-        list.appendChild(li);
-      });
+      message.style.color = "green";
+      message.innerText = "Login successful! Redirecting...";
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 1500);
     }
   </script>
 </body>
