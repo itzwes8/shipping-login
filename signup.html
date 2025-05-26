@@ -6,14 +6,20 @@
     body { font-family: sans-serif; max-width: 400px; margin: 40px auto; }
     input, button { display: block; width: 100%; margin-bottom: 10px; padding: 8px; }
     #message { color: red; }
+    .link { text-align: center; margin-top: 15px; }
+    .link a { text-decoration: none; color: #0070f3; }
   </style>
 </head>
 <body>
   <h2>Create an Account</h2>
   <input id="email" type="email" placeholder="Email" />
   <input id="password" type="password" placeholder="Password (6+ characters)" />
-  <button onclick="signup()">Sign Up</button>
+  <button id="signup">Sign Up</button>
   <p id="message"></p>
+
+  <div class="link">
+    Already have an account? <a href="index.html">Log in</a>
+  </div>
 
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
@@ -40,6 +46,8 @@
         }, 3000);
       }
     }
+
+    document.getElementById("signup").addEventListener("click", signup);
   </script>
 </body>
 </html>
