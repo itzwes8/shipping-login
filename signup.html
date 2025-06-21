@@ -1,103 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sign Up</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f4f7fa;
-      padding: 40px;
-      display: flex;
-      justify-content: center;
-    }
-    .container {
-      background: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      width: 100%;
       max-width: 400px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f4f7fa;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
     }
-    h2 { margin-bottom: 20px; text-align: center; }
-    input {
-      padding: 10px;
-      margin-bottom: 15px;
+    input, button {
       width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
       border: 1px solid #ccc;
-      border-radius: 6px;
     }
     button {
-      background-color: #5e89f0;
+      background-color: #5E89F0;
       color: white;
-      border: none;
-      padding: 12px;
-      width: 100%;
-      border-radius: 6px;
+      font-weight: bold;
       cursor: pointer;
+      border: none;
     }
-    button:hover {
-      background-color: #4a73d8;
-    }
-    .message {
-      margin-top: 10px;
-      color: red;
-      font-size: 0.9em;
-    }
-    .link {
+    p {
       margin-top: 15px;
       text-align: center;
-      font-size: 0.9em;
     }
-    .link a {
-      color: #5e89f0;
+    a {
+      color: #5E89F0;
       text-decoration: none;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Create Account</h2>
-    <input id="first" type="text" placeholder="First Name" />
-    <input id="last" type="text" placeholder="Last Name" />
-    <input id="email" type="email" placeholder="Email" />
-    <input id="password" type="password" placeholder="Password" />
-    <input id="confirm" type="password" placeholder="Confirm Password" />
-    <button onclick="signUp()">Sign Up</button>
-    <div class="message" id="message"></div>
-    <div class="link">Already have an account? <a href="login.html">Log in</a></div>
-  </div>
+
+  <h2>Create Your Account</h2>
+
+  <input type="text" id="firstName" placeholder="First Name" />
+  <input type="text" id="lastName" placeholder="Last Name" />
+  <input type="email" id="email" placeholder="Email" />
+  <input type="password" id="password" placeholder="Password" />
+  <input type="password" id="confirmPassword" placeholder="Confirm Password" />
+  <button id="signUpButton">Sign Up</button>
+
+  <p id="message"></p>
+
+  <p>Already have an account? <a href="login.html">Log in</a></p>
 
   <script>
-    const supabase = supabase.createClient(
-      'https://ggogevnzmukktcsgniyk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdnb2dldm56bXVra3Rjc2duaXlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyMjExNTksImV4cCI6MjA2Mzc5NzE1OX0.HSeIAtUsKybGsA4C7XiNKhry0tlgaXhdG_0AY8gLYxM'
-    );
+    document.addEventListener('DOMContentLoaded', function () {
+      const supabase = window.supabase.createClient(
+        "https://ggogevnzmukktcsgniyk.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdnb2dldm56bXVra3Rjc2duaXlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyMjExNTksImV4cCI6MjA2Mzc5NzE1OX0.HSeIAtUsKybGsA4C7XiNKhry0tlgaXhdG_0AY8gLYxM"
+      );
 
-    async function signUp() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const confirm = document.getElementById("confirm").value;
-      const message = document.getElementById("message");
+      document.getElementById('signUpButton').addEventListener('click', async function () {
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
 
-      if (password !== confirm) {
-        message.innerText = "Passwords do not match.";
-        return;
-      }
+        if (password !== confirmPassword) {
+          document.getElementById('message').innerText = "Passwords do not match!";
+          return;
+        }
 
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password
+        const { data, error } = await supabase.auth.signUp({ email, password });
+
+        if (error) {
+          document.getElementById('message').innerText = "Sign-up failed: " + error.message;
+        } else {
+          document.getElementById('message').innerText = "Sign-up successful! Please check your email to confirm.";
+          // Optional: Redirect after a few seconds
+          // setTimeout(() => window.location.href = "login.html", 3000);
+        }
       });
-
-      if (error) {
-        message.innerText = "Sign-up failed: " + error.message;
-      } else {
-        message.style.color = "green";
-        message.innerText = "Sign-up successful! Please check your email.";
-      }
-    }
+    });
   </script>
 </body>
 </html>
