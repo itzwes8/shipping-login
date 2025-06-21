@@ -1,51 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Sign Up</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      max-width: 400px;
-      margin: 40px auto;
-      padding: 20px;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f7fa;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
       border-radius: 10px;
-      background: #f8f9fb;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    h2 {
-      text-align: center;
-    }
-    input, button {
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       width: 100%;
+      max-width: 400px;
+    }
+    h2 { margin-bottom: 20px; text-align: center; }
+    input {
       padding: 10px;
-      margin-top: 10px;
-      font-size: 16px;
-      border-radius: 6px;
+      margin-bottom: 15px;
+      width: 100%;
       border: 1px solid #ccc;
+      border-radius: 6px;
     }
     button {
-      background-color: #5E89F0;
+      background-color: #5e89f0;
       color: white;
       border: none;
+      padding: 12px;
+      width: 100%;
+      border-radius: 6px;
       cursor: pointer;
     }
-    #message {
+    button:hover {
+      background-color: #4a73d8;
+    }
+    .message {
       margin-top: 10px;
       color: red;
+      font-size: 0.9em;
+    }
+    .link {
+      margin-top: 15px;
       text-align: center;
+      font-size: 0.9em;
+    }
+    .link a {
+      color: #5e89f0;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
-  <h2>Create an Account</h2>
-  <input id="first_name" type="text" placeholder="First Name" />
-  <input id="last_name" type="text" placeholder="Last Name" />
-  <input id="email" type="email" placeholder="Email" />
-  <input id="password" type="password" placeholder="Password" />
-  <input id="confirm_password" type="password" placeholder="Confirm Password" />
-  <button onclick="signUp()">Sign Up</button>
-  <p id="message"></p>
+  <div class="container">
+    <h2>Create Account</h2>
+    <input id="first" type="text" placeholder="First Name" />
+    <input id="last" type="text" placeholder="Last Name" />
+    <input id="email" type="email" placeholder="Email" />
+    <input id="password" type="password" placeholder="Password" />
+    <input id="confirm" type="password" placeholder="Confirm Password" />
+    <button onclick="signUp()">Sign Up</button>
+    <div class="message" id="message"></div>
+    <div class="link">Already have an account? <a href="login.html">Log in</a></div>
+  </div>
 
   <script>
     const supabase = supabase.createClient(
@@ -54,32 +76,26 @@
     );
 
     async function signUp() {
-      const firstName = document.getElementById('first_name').value;
-      const lastName = document.getElementById('last_name').value;
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const confirm = document.getElementById('confirm_password').value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const confirm = document.getElementById("confirm").value;
+      const message = document.getElementById("message");
 
       if (password !== confirm) {
-        document.getElementById('message').innerText = "Passwords do not match.";
+        message.innerText = "Passwords do not match.";
         return;
       }
 
       const { data, error } = await supabase.auth.signUp({
         email,
-        password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName
-          }
-        }
+        password
       });
 
       if (error) {
-        document.getElementById('message').innerText = error.message;
+        message.innerText = "Sign-up failed: " + error.message;
       } else {
-        document.getElementById('message').innerText = "Sign up successful. Please check your email.";
+        message.style.color = "green";
+        message.innerText = "Sign-up successful! Please check your email.";
       }
     }
   </script>
