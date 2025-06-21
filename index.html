@@ -1,108 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Log In</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f4f7fa;
-      padding: 40px;
+      background: #f4f6fc;
       display: flex;
       justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
     }
     .container {
-      background: #fff;
+      background: white;
       padding: 30px;
       border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
       width: 100%;
       max-width: 400px;
     }
-    h2 { margin-bottom: 20px; text-align: center; }
+    h2 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
     input {
-      padding: 10px;
-      margin-bottom: 15px;
       width: 100%;
-      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 12px;
       border-radius: 6px;
+      border: 1px solid #ccc;
     }
     button {
+      width: 100%;
+      padding: 12px;
       background-color: #5e89f0;
       color: white;
+      font-weight: bold;
       border: none;
-      padding: 12px;
-      width: 100%;
       border-radius: 6px;
       cursor: pointer;
     }
     button:hover {
-      background-color: #4a73d8;
+      background-color: #4a74d3;
     }
-    .message {
-      margin-top: 10px;
-      color: red;
-      font-size: 0.9em;
-    }
-    .forgot, .link {
-      margin-top: 10px;
+    .link {
       text-align: center;
-      font-size: 0.9em;
+      margin-top: 12px;
     }
-    .forgot a, .link a {
+    .link a {
       color: #5e89f0;
       text-decoration: none;
+    }
+    #message {
+      color: red;
+      text-align: center;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Log In</h2>
-    <input id="email" type="email" placeholder="Email" />
-    <input id="password" type="password" placeholder="Password" />
-    <button onclick="logIn()">Log In</button>
-    <div class="message" id="message"></div>
-    <div class="forgot"><a href="#" onclick="recover()">Forgot Password?</a></div>
-    <div class="link">Don't have an account? <a href="signup.html">Sign up</a></div>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <button id="loginBtn">Log In</button>
+    <div class="link">
+      <a href="#">Forgot Password?</a>
+    </div>
+    <div class="link">
+      Don't have an account? <a href="signup.html">Sign up</a>
+    </div>
+    <p id="message"></p>
   </div>
 
-  <script>
-    const supabase = supabase.createClient(
-      'https://ggogevnzmukktcsgniyk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdnb2dldm56bXVra3Rjc2duaXlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyMjExNTksImV4cCI6MjA2Mzc5NzE1OX0.HSeIAtUsKybGsA4C7XiNKhry0tlgaXhdG_0AY8gLYxM'
-    );
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    async function logIn() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const message = document.getElementById("message");
+    const supabaseUrl = 'https://ggogevnzmukktcsgniyk.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdnb2dldm56bXVra3Rjc2duaXlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyMjExNTksImV4cCI6MjA2Mzc5NzE1OX0.HSeIAtUsKybGsA4C7XiNKhry0tlgaXhdG_0AY8gLYxM';
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const message = document.getElementById('message');
+
+      message.textContent = "";
+
+      if (!email || !password) {
+        message.textContent = "Please fill in all fields.";
+        return;
+      }
 
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        message.innerText = "Login failed: " + error.message;
+        if (error.message.includes("Invalid login credentials")) {
+          message.textContent = "Email not registered or password is incorrect.";
+        } else {
+          message.textContent = "Login failed: " + error.message;
+        }
       } else {
         message.style.color = "green";
-        message.innerText = "Login successful!";
-        // Optionally redirect to dashboard
-        // window.location.href = "dashboard.html";
+        message.textContent = "Login successful! Redirecting...";
+        // Redirect or load user data
+        setTimeout(() => {
+          window.location.href = "/dashboard.html"; // Update with your actual dashboard page
+        }, 1500);
       }
-    }
-
-    async function recover() {
-      const email = document.getElementById("email").value;
-      if (!email) {
-        alert("Please enter your email to reset password.");
-        return;
-      }
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email);
-      if (error) {
-        alert("Error: " + error.message);
-      } else {
-        alert("Password recovery email sent!");
-      }
-    }
+    });
   </script>
 </body>
 </html>
