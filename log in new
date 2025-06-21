@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Log In</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: 40px auto;
+      padding: 20px;
+      border-radius: 10px;
+      background: #f8f9fb;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #5E89F0;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    a {
+      text-align: center;
+      display: block;
+      margin-top: 10px;
+      color: #5E89F0;
+      text-decoration: none;
+    }
+    #message {
+      margin-top: 10px;
+      text-align: center;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h2>Log In</h2>
+  <input id="email" type="email" placeholder="Email" />
+  <input id="password" type="password" placeholder="Password" />
+  <button onclick="logIn()">Log In</button>
+  <a href="#" onclick="forgotPassword()">Forgot Password?</a>
+  <p id="message"></p>
+
+  <script>
+    const supabase = supabase.createClient(
+       'https://ggogevnzmukktcsgniyk.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdnb2dldm56bXVra3Rjc2duaXlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyMjExNTksImV4cCI6MjA2Mzc5NzE1OX0.HSeIAtUsKybGsA4C7XiNKhry0tlgaXhdG_0AY8gLYxM'
+    );
+
+
+
+    async function logIn() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        document.getElementById('message').innerText = error.message.includes("Invalid login credentials")
+          ? "Account not found or wrong password."
+          : error.message;
+      } else {
+        document.getElementById('message').innerText = "Login successful!";
+        // Optionally redirect
+        // window.location.href = "dashboard.html";
+      }
+    }
+
+    async function forgotPassword() {
+      const email = prompt("Enter your email to reset password:");
+      if (!email) return;
+
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) {
+        alert(error.message);
+      } else {
+        alert("Password reset email sent.");
+      }
+    }
+  </script>
+</body>
+</html>
