@@ -1,51 +1,102 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login - Shipping App</title>
+  <title>Login - Pong's Shipping Company</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
-    body { font-family: sans-serif; max-width: 400px; margin: 40px auto; }
-    input, button { display: block; width: 100%; margin-bottom: 10px; padding: 8px; }
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: 60px auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #5E89F0;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #4a75cc;
+    }
+
+    #message {
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .footer-link {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .footer-link a {
+      text-decoration: none;
+      color: #5E89F0;
+    }
   </style>
 </head>
 <body>
-  <h2>Login to Your Account</h2>
+  <h2>Login</h2>
+
   <input id="email" type="email" placeholder="Email" />
   <input id="password" type="password" placeholder="Password" />
-  <button id="login-button">Log In</button>
-  <p id="message" style="color:red;"></p>
+  <button onclick="login()">Log In</button>
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  <p id="message"></p>
 
-    const supabase = createClient(
+  <div class="footer-link">
+    <a href="#">Forgot password?</a><br>
+    <span>Don't have an account? <a href="/signup.html">Sign up</a></span>
+  </div>
+
+  <script>
+    const supabase = supabase.createClient(
       'https://ggogevnzmukktcsgniyk.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdnb2dldm56bXVra3Rjc2duaXlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyMjExNTksImV4cCI6MjA2Mzc5NzE1OX0.HSeIAtUsKybGsA4C7XiNKhry0tlgaXhdG_0AY8gLYxM'
     );
 
-    document.getElementById("login-button").addEventListener("click", login);
-
     async function login() {
-      const email = document.getElementById('email').value;
+      const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      const message = document.getElementById('message');
 
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      console.log("Login result:", data, error);
+
+      const message = document.getElementById('message');
 
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
-          message.innerText = "Account not found or incorrect password.";
+          message.innerText = "❌ Account not found or password incorrect.";
         } else {
-          message.innerText = "Login failed: " + error.message;
+          message.innerText = "❌ Login failed: " + error.message;
         }
+        message.style.color = "red";
         return;
       }
 
+      message.innerText = "✅ Login successful!";
       message.style.color = "green";
-      message.innerText = "Login successful! Redirecting...";
-      setTimeout(() => {
-        window.location.href = "dashboard.html";
-      }, 1500);
+
+      // Optional redirect
+      // window.location.href = "/dashboard.html";
     }
   </script>
 </body>
