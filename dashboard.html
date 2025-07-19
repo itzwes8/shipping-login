@@ -1,31 +1,190 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dashboard - Shipping App</title>
   <style>
-    body { font-family: sans-serif; margin: 40px auto; max-width: 800px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-    #logout { margin-top: 20px; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
+      color: #1a1a1a;
+    }
+    main {
+      background: #fff;
+      max-width: 900px;
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgb(0 0 0 / 0.08);
+      padding: 40px 50px;
+    }
+    h1 {
+      font-weight: 600;
+      font-size: 1.75rem;
+      margin-bottom: 8px;
+      color: #2c3e50;
+    }
+    h2 {
+      font-weight: 400;
+      font-size: 1.1rem;
+      color: #7f8c8d;
+      margin-bottom: 32px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 10px;
+      box-shadow: 0 4px 8px rgb(0 0 0 / 0.05);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fafafa;
+      margin-bottom: 48px;
+    }
+    thead tr {
+      background: #34495e;
+      color: white;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    thead th {
+      padding: 14px 20px;
+      text-align: left;
+    }
+    tbody tr {
+      background: white;
+      transition: box-shadow 0.2s ease;
+      cursor: default;
+    }
+    tbody tr:hover {
+      box-shadow: 0 8px 20px rgb(0 0 0 / 0.1);
+    }
+    tbody td {
+      padding: 14px 20px;
+      font-size: 0.95rem;
+      color: #2d3436;
+      border-bottom: none;
+    }
+
+    form#prealert-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    form#prealert-form input[type="text"] {
+      flex: 1 1 200px;
+      padding: 12px 16px;
+      font-size: 1rem;
+      border: 1.8px solid #ccc;
+      border-radius: 8px;
+      transition: border-color 0.25s ease;
+    }
+    form#prealert-form input[type="text"]:focus {
+      outline: none;
+      border-color: #2980b9;
+      box-shadow: 0 0 5px rgb(41 128 185 / 0.5);
+    }
+    form#prealert-form button {
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.25s ease;
+      box-shadow: 0 6px 12px rgb(39 174 96 / 0.4);
+      flex-shrink: 0;
+    }
+    form#prealert-form button:hover {
+      background-color: #1e8449;
+      box-shadow: 0 8px 18px rgb(30 132 73 / 0.6);
+    }
+
+    #logout {
+      background-color: #2980b9;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.25s ease;
+      box-shadow: 0 6px 12px rgb(41 128 185 / 0.4);
+      display: inline-block;
+      margin-top: 20px;
+    }
+    #logout:hover {
+      background-color: #1c5980;
+      box-shadow: 0 8px 18px rgb(28 89 128 / 0.6);
+    }
+
+    #form-message {
+      font-size: 0.9rem;
+      margin-top: 8px;
+      color: #27ae60;
+      font-weight: 600;
+      min-height: 20px;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      main {
+        padding: 30px 20px;
+      }
+      thead th, tbody td {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+      }
+      form#prealert-form input[type="text"], form#prealert-form button {
+        flex: 1 1 100%;
+      }
+      #logout {
+        width: 100%;
+        padding: 14px 0;
+      }
+    }
   </style>
 </head>
 <body>
-  <h2>Your Packages</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Tracking #</th>
-        <th>Merchant</th>
-        <th>Status</th>
-        <th>Date</th>
-      </tr>
-    </thead>
-    <tbody id="package-table-body">
-      <tr><td colspan="4">Loading...</td></tr>
-    </tbody>
-  </table>
-  <button id="logout">Log Out</button>
+  <main>
+    <h1 id="welcome-text">Welcome, User</h1>
+    <h2>Your Packages</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Tracking #</th>
+          <th>Merchant</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="package-table-body">
+        <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Pre-Alert a Package</h2>
+    <form id="prealert-form">
+      <input type="text" id="tracking-number" placeholder="Tracking Number" required autocomplete="off" />
+      <input type="text" id="merchant" placeholder="Merchant" required autocomplete="off" />
+      <button type="submit">Submit Pre-Alert</button>
+    </form>
+    <div id="form-message" aria-live="polite"></div>
+
+    <button id="logout">Log Out</button>
+  </main>
 
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
@@ -36,15 +195,29 @@
     );
 
     const tbody = document.getElementById("package-table-body");
+    const welcomeText = document.getElementById("welcome-text");
+    const form = document.getElementById("prealert-form");
+    const trackingInput = document.getElementById("tracking-number");
+    const merchantInput = document.getElementById("merchant");
+    const formMessage = document.getElementById("form-message");
+
+    let currentUser;
 
     async function loadPackages() {
       const { data: sessionData } = await supabase.auth.getSession();
       const user = sessionData?.session?.user;
 
       if (!user) {
-        tbody.innerHTML = "<tr><td colspan='4'>You must be logged in.</td></tr>";
+        welcomeText.textContent = "Welcome, Guest";
+        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>You must be logged in.</td></tr>";
+        form.style.display = "none";
         return;
       }
+
+      currentUser = user;
+
+      welcomeText.textContent = `Welcome, ${user.email.split('@')[0]}`;
+      form.style.display = "flex";
 
       const { data, error } = await supabase
         .from('packages')
@@ -52,8 +225,12 @@
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error || !data.length) {
-        tbody.innerHTML = "<tr><td colspan='4'>No packages found.</td></tr>";
+      if (error) {
+        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Error loading packages.</td></tr>";
+        return;
+      }
+      if (!data.length) {
+        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No packages found.</td></tr>";
         return;
       }
 
@@ -70,12 +247,53 @@
       });
     }
 
-    loadPackages();
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const tracking = trackingInput.value.trim();
+      const merchant = merchantInput.value.trim();
+
+      if (!tracking || !merchant) {
+        formMessage.style.color = "#e74c3c"; // red
+        formMessage.textContent = "Please fill in both fields.";
+        return;
+      }
+
+      formMessage.style.color = "#2980b9";
+      formMessage.textContent = "Submitting...";
+
+      const { error } = await supabase.from('packages').insert([{
+        user_id: currentUser.id,
+        tracking_number: tracking,
+        merchant: merchant,
+        status: "Pre-alerted",
+        created_at: new Date().toISOString()
+      }]);
+
+      if (error) {
+        formMessage.style.color = "#e74c3c";
+        formMessage.textContent = "Failed to submit. Please try again.";
+        console.error(error);
+        return;
+      }
+
+      formMessage.style.color = "#27ae60";
+      formMessage.textContent = "Pre-alert submitted successfully!";
+
+      // Clear inputs
+      trackingInput.value = "";
+      merchantInput.value = "";
+
+      // Reload packages to show the new pre-alerted package
+      await loadPackages();
+    });
 
     document.getElementById("logout").addEventListener("click", async () => {
       await supabase.auth.signOut();
       window.location.href = "index.html";
     });
+
+    loadPackages();
   </script>
 </body>
 </html>
