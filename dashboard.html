@@ -6,7 +6,6 @@
   <title>Dashboard - Shipping App</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-
     body {
       font-family: 'Inter', sans-serif;
       background: #f5f7fa;
@@ -38,7 +37,6 @@
       color: #7f8c8d;
       margin-bottom: 32px;
     }
-
     table {
       width: 100%;
       border-collapse: separate;
@@ -71,9 +69,7 @@
       padding: 14px 20px;
       font-size: 0.95rem;
       color: #2d3436;
-      border-bottom: none;
     }
-
     form#prealert-form {
       display: flex;
       flex-wrap: wrap;
@@ -91,7 +87,7 @@
     form#prealert-form input[type="text"]:focus {
       outline: none;
       border-color: #2980b9;
-      box-shadow: 0 0 5px rgb(41 128 185 / 0.5);
+      box-shadow: 0 0 5px rgba(41, 128, 185, 0.5);
     }
     form#prealert-form button {
       background-color: #27ae60;
@@ -103,14 +99,13 @@
       cursor: pointer;
       font-weight: 600;
       transition: background-color 0.25s ease;
-      box-shadow: 0 6px 12px rgb(39 174 96 / 0.4);
+      box-shadow: 0 6px 12px rgba(39, 174, 96, 0.4);
       flex-shrink: 0;
     }
     form#prealert-form button:hover {
       background-color: #1e8449;
-      box-shadow: 0 8px 18px rgb(30 132 73 / 0.6);
+      box-shadow: 0 8px 18px rgba(30, 132, 73, 0.6);
     }
-
     #logout {
       background-color: #2980b9;
       color: white;
@@ -121,15 +116,14 @@
       cursor: pointer;
       font-weight: 600;
       transition: background-color 0.25s ease;
-      box-shadow: 0 6px 12px rgb(41 128 185 / 0.4);
+      box-shadow: 0 6px 12px rgba(41, 128, 185, 0.4);
       display: inline-block;
       margin-top: 20px;
     }
     #logout:hover {
       background-color: #1c5980;
-      box-shadow: 0 8px 18px rgb(28 89 128 / 0.6);
+      box-shadow: 0 8px 18px rgba(28, 89, 128, 0.6);
     }
-
     #form-message {
       font-size: 0.9rem;
       margin-top: 8px;
@@ -137,8 +131,6 @@
       font-weight: 600;
       min-height: 20px;
     }
-
-    /* Responsive */
     @media (max-width: 600px) {
       main {
         padding: 30px 20px;
@@ -167,22 +159,23 @@
           <th>Tracking #</th>
           <th>Merchant</th>
           <th>Status</th>
+          <th>Price</th>
           <th>Date</th>
+          <th>Invoice</th>
         </tr>
       </thead>
       <tbody id="package-table-body">
-        <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
+        <tr><td colspan="6" style="text-align:center;">Loading...</td></tr>
       </tbody>
     </table>
 
     <h2>Pre-Alert a Package</h2>
     <form id="prealert-form">
-      <input type="text" id="tracking-number" placeholder="Tracking Number" required autocomplete="off" />
-      <input type="text" id="merchant" placeholder="Merchant" required autocomplete="off" />
+      <input type="text" id="tracking-number" placeholder="Tracking Number" required />
+      <input type="text" id="merchant" placeholder="Merchant" required />
       <button type="submit">Submit Pre-Alert</button>
     </form>
     <div id="form-message" aria-live="polite"></div>
-
     <button id="logout">Log Out</button>
   </main>
 
@@ -190,9 +183,12 @@
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
     const supabase = createClient(
-      'https://ggogevnzmukktcsgniyk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdnb2dldm56bXVra3Rjc2duaXlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyMjExNTksImV4cCI6MjA2Mzc5NzE1OX0.HSeIAtUsKybGsA4C7XiNKhry0tlgaXhdG_0AY8gLYxM'
+      'https://qcnkzdcuugxahnfemjld.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjbmt6ZGN1dWd4YWhuZmVtamxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NzY4MTcsImV4cCI6MjA2ODQ1MjgxN30.04rIvDXSHF0Vt4IGdOfDpaAUS87F66As5nePB516oAA'
     );
+
+window.supabase = supabase;
+
 
     const tbody = document.getElementById("package-table-body");
     const welcomeText = document.getElementById("welcome-text");
@@ -209,15 +205,12 @@
 
       if (!user) {
         welcomeText.textContent = "Welcome, Guest";
-        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>You must be logged in.</td></tr>";
-        form.style.display = "none";
+        tbody.innerHTML = "<tr><td colspan='6'>Please log in to view packages.</td></tr>";
         return;
       }
 
       currentUser = user;
-
       welcomeText.textContent = `Welcome, ${user.email.split('@')[0]}`;
-      form.style.display = "flex";
 
       const { data, error } = await supabase
         .from('packages')
@@ -225,67 +218,94 @@
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Error loading packages.</td></tr>";
-        return;
-      }
-      if (!data.length) {
-        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No packages found.</td></tr>";
+      if (error || !data) {
+        tbody.innerHTML = "<tr><td colspan='6'>Error loading packages.</td></tr>";
         return;
       }
 
       tbody.innerHTML = "";
+
       data.forEach(pkg => {
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${pkg.tracking_number}</td>
-          <td>${pkg.merchant}</td>
+          <td>${pkg.merchant || "-"}</td>
           <td>${pkg.status}</td>
+          <td>${pkg.price ? `$${pkg.price.toFixed(2)}` : "N/A"}</td>
           <td>${new Date(pkg.created_at).toLocaleDateString()}</td>
+          <td>
+            ${pkg.invoice_url
+              ? `<a href="${pkg.invoice_url}" target="_blank">View</a>`
+              : `<input type="file" data-id="${pkg.id}" accept="image/*" />`}
+          </td>
         `;
         tbody.appendChild(row);
+      });
+
+      // Upload handlers
+      document.querySelectorAll('input[type="file"]').forEach(input => {
+        input.addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          const packageId = e.target.dataset.id;
+          if (!file || !packageId) return;
+
+          const filePath = `${currentUser.id}/${packageId}-${file.name}`;
+          const { error: uploadError } = await supabase
+            .storage
+            .from('invoices')
+            .upload(filePath, file, { upsert: true });
+
+          if (uploadError) {
+            alert("Upload failed.");
+            return;
+          }
+
+          const { data: urlData } = supabase.storage
+            .from('invoices')
+            .getPublicUrl(filePath);
+
+          const publicUrl = urlData.publicUrl;
+
+          await supabase
+            .from('packages')
+            .update({ invoice_url: publicUrl })
+            .eq('id', packageId);
+
+          alert("Invoice uploaded.");
+          loadPackages();
+        });
       });
     }
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-
       const tracking = trackingInput.value.trim();
       const merchant = merchantInput.value.trim();
 
       if (!tracking || !merchant) {
-        formMessage.style.color = "#e74c3c"; // red
+        formMessage.style.color = "#e74c3c";
         formMessage.textContent = "Please fill in both fields.";
         return;
       }
 
-      formMessage.style.color = "#2980b9";
-      formMessage.textContent = "Submitting...";
-
       const { error } = await supabase.from('packages').insert([{
         user_id: currentUser.id,
         tracking_number: tracking,
-        merchant: merchant,
-        status: "Pre-alerted",
-        created_at: new Date().toISOString()
+        merchant,
+        status: "Pre-alerted"
       }]);
 
       if (error) {
         formMessage.style.color = "#e74c3c";
-        formMessage.textContent = "Failed to submit. Please try again.";
-        console.error(error);
+        formMessage.textContent = "Error submitting.";
         return;
       }
 
       formMessage.style.color = "#27ae60";
-      formMessage.textContent = "Pre-alert submitted successfully!";
-
-      // Clear inputs
+      formMessage.textContent = "Pre-alert submitted.";
       trackingInput.value = "";
       merchantInput.value = "";
-
-      // Reload packages to show the new pre-alerted package
-      await loadPackages();
+      loadPackages();
     });
 
     document.getElementById("logout").addEventListener("click", async () => {
