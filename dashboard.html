@@ -37,15 +37,20 @@
       color: #7f8c8d;
       margin-bottom: 32px;
     }
+
+    .table-wrapper {
+      overflow-x: auto;
+      width: 100%;
+      margin-bottom: 48px;
+    }
     table {
       width: 100%;
+      min-width: 600px;
       border-collapse: separate;
       border-spacing: 0 10px;
       box-shadow: 0 4px 8px rgb(0 0 0 / 0.05);
       border-radius: 10px;
-      overflow: hidden;
       background: #fafafa;
-      margin-bottom: 48px;
     }
     thead tr {
       background: #34495e;
@@ -60,7 +65,6 @@
     tbody tr {
       background: white;
       transition: box-shadow 0.2s ease;
-      cursor: default;
     }
     tbody tr:hover {
       box-shadow: 0 8px 20px rgb(0 0 0 / 0.1);
@@ -70,6 +74,7 @@
       font-size: 0.95rem;
       color: #2d3436;
     }
+
     form#prealert-form {
       display: flex;
       flex-wrap: wrap;
@@ -106,6 +111,7 @@
       background-color: #1e8449;
       box-shadow: 0 8px 18px rgba(30, 132, 73, 0.6);
     }
+
     #logout {
       background-color: #2980b9;
       color: white;
@@ -117,13 +123,13 @@
       font-weight: 600;
       transition: background-color 0.25s ease;
       box-shadow: 0 6px 12px rgba(41, 128, 185, 0.4);
-      display: inline-block;
       margin-top: 20px;
     }
     #logout:hover {
       background-color: #1c5980;
       box-shadow: 0 8px 18px rgba(28, 89, 128, 0.6);
     }
+
     #form-message {
       font-size: 0.9rem;
       margin-top: 8px;
@@ -131,13 +137,10 @@
       font-weight: 600;
       min-height: 20px;
     }
+
     @media (max-width: 600px) {
       main {
         padding: 30px 20px;
-      }
-      thead th, tbody td {
-        padding: 10px 12px;
-        font-size: 0.85rem;
       }
       form#prealert-form input[type="text"], form#prealert-form button {
         flex: 1 1 100%;
@@ -153,21 +156,24 @@
   <main>
     <h1 id="welcome-text">Welcome, User</h1>
     <h2>Your Packages</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Tracking #</th>
-          <th>Merchant</th>
-          <th>Status</th>
-          <th>Price</th>
-          <th>Date</th>
-          <th>Invoice</th>
-        </tr>
-      </thead>
-      <tbody id="package-table-body">
-        <tr><td colspan="6" style="text-align:center;">Loading...</td></tr>
-      </tbody>
-    </table>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Tracking #</th>
+            <th>Merchant</th>
+            <th>Status</th>
+            <th>Price</th>
+            <th>Date</th>
+            <th>Invoice</th>
+          </tr>
+        </thead>
+        <tbody id="package-table-body">
+          <tr><td colspan="6" style="text-align:center;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
 
     <h2>Pre-Alert a Package</h2>
     <form id="prealert-form">
@@ -187,8 +193,7 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydWx0cGNrYnZvYWxzYXFtdXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MzM5MjcsImV4cCI6MjA2OTUwOTkyN30.mB5Cverh79nwg2YMqYkc5c-Mpa397leZKEY4y_0Nja4'
     );
 
-window.supabase = supabase;
-
+    window.supabase = supabase;
 
     const tbody = document.getElementById("package-table-body");
     const welcomeText = document.getElementById("welcome-text");
@@ -210,7 +215,7 @@ window.supabase = supabase;
       }
 
       currentUser = user;
-      welcomeText.textContent = `Welcome, ${user.email.split('@')[0]}`;
+      welcomeText.textContent = Welcome, ${user.email.split('@')[0]};
 
       const { data, error } = await supabase
         .from('packages')
@@ -224,19 +229,18 @@ window.supabase = supabase;
       }
 
       tbody.innerHTML = "";
-
       data.forEach(pkg => {
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${pkg.tracking_number}</td>
           <td>${pkg.merchant || "-"}</td>
           <td>${pkg.status}</td>
-          <td>${pkg.price ? `$${pkg.price.toFixed(2)}` : "N/A"}</td>
+          <td>${pkg.price ? $${pkg.price.toFixed(2)} : "N/A"}</td>
           <td>${new Date(pkg.created_at).toLocaleDateString()}</td>
           <td>
             ${pkg.invoice_url
-              ? `<a href="${pkg.invoice_url}" target="_blank">View</a>`
-              : `<input type="file" data-id="${pkg.id}" accept="image/*" />`}
+              ? <a href="${pkg.invoice_url}" target="_blank">View</a>
+              : <input type="file" data-id="${pkg.id}" accept="image/*" />}
           </td>
         `;
         tbody.appendChild(row);
@@ -249,7 +253,7 @@ window.supabase = supabase;
           const packageId = e.target.dataset.id;
           if (!file || !packageId) return;
 
-          const filePath = `${currentUser.id}/${packageId}-${file.name}`;
+          const filePath = ${currentUser.id}/${packageId}-${file.name};
           const { error: uploadError } = await supabase
             .storage
             .from('invoices')
