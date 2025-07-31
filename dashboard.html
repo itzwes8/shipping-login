@@ -185,160 +185,139 @@
     <button id="logout">Log Out</button>
   </main>
 
- <script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  const supabase = createClient(
-    'https://erultpckbvoalsaqmuuq.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydWx0cGNrYnZvYWxzYXFtdXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MzM5MjcsImV4cCI6MjA2OTUwOTkyN30.mB5Cverh79nwg2YMqYkc5c-Mpa397leZKEY4y_0Nja4'
-  );
-  window.supabase = supabase;
+    const supabase = createClient(
+      'https://erultpckbvoalsaqmuuq.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydWx0cGNrYnZvYWxzYXFtdXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MzM5MjcsImV4cCI6MjA2OTUwOTkyN30.mB5Cverh79nwg2YMqYkc5c-Mpa397leZKEY4y_0Nja4'
+    );
 
-  const tbody = document.getElementById("package-table-body");
-  const mobileList = document.getElementById("mobile-packages");
-  const welcomeText = document.getElementById("welcome-text");
-  const form = document.getElementById("prealert-form");
-  const trackingInput = document.getElementById("tracking-number");
-  const merchantInput = document.getElementById("merchant");
-  const formMessage = document.getElementById("form-message");
+    window.supabase = supabase;
 
-  let currentUser;
+    const tbody = document.getElementById("package-table-body");
+    const welcomeText = document.getElementById("welcome-text");
+    const form = document.getElementById("prealert-form");
+    const trackingInput = document.getElementById("tracking-number");
+    const merchantInput = document.getElementById("merchant");
+    const formMessage = document.getElementById("form-message");
 
-  async function loadPackages() {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const user = sessionData?.session?.user;
+    let currentUser;
 
-    if (!user) {
-      welcomeText.textContent = "Welcome, Guest";
-      tbody.innerHTML = "<tr><td colspan='6'>Please log in.</td></tr>";
-      return;
-    }
+    async function loadPackages() {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData?.session?.user;
 
-    currentUser = user;
-    welcomeText.textContent = `Welcome, ${user.email.split('@')[0]}`;
+      if (!user) {
+        welcomeText.textContent = "Welcome, Guest";
+        tbody.innerHTML = "<tr><td colspan='6'>Please log in to view packages.</td></tr>";
+        return;
+      }
 
-    const { data, error } = await supabase
-      .from('packages')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+      currentUser = user;
+      welcomeText.textContent = `Welcome, ${user.email.split('@')[0]}`;
 
-    if (error || !data) {
-      tbody.innerHTML = "<tr><td colspan='6'>Error loading packages.</td></tr>";
-      return;
-    }
+      const { data, error } = await supabase
+        .from('packages')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-    tbody.innerHTML = "";
-    mobileList.innerHTML = "";
+      if (error || !data) {
+        tbody.innerHTML = "<tr><td colspan='6'>Error loading packages.</td></tr>";
+        return;
+      }
 
-    data.forEach(pkg => {
-      // Desktop table row
-      const row = document.createElement("tr");
-
-      const invoiceCell = pkg.invoice_url
-        ? `<a href="${pkg.invoice_url}" target="_blank">View</a>`
-        : `<input type="file" data-id="${pkg.id}" accept="image/*" />`;
-
-      row.innerHTML = `
-        <td>${pkg.tracking_number}</td>
-        <td>${pkg.merchant || "-"}</td>
-        <td>${pkg.status}</td>
-        <td>${pkg.price ? `$${pkg.price.toFixed(2)}` : "N/A"}</td>
-        <td>${new Date(pkg.created_at).toLocaleDateString()}</td>
-        <td>${invoiceCell}</td>
-      `;
-      tbody.appendChild(row);
-
-      // Mobile stacked card
-      const card = document.createElement("div");
-      card.className = "package-card";
-      card.innerHTML = `
-        <p><strong>Tracking #:</strong> ${pkg.tracking_number}</p>
-        <p><strong>Merchant:</strong> ${pkg.merchant || "-"}</p>
-        <p><strong>Status:</strong> ${pkg.status}</p>
-        <p><strong>Price:</strong> ${pkg.price ? `$${pkg.price.toFixed(2)}` : "N/A"}</p>
-        <p><strong>Date:</strong> ${new Date(pkg.created_at).toLocaleDateString()}</p>
-        <p><strong>Invoice:</strong><br />
-          ${pkg.invoice_url
-            ? `<a href="${pkg.invoice_url}" target="_blank">View Invoice</a>`
-            : `<input type="file" data-id="${pkg.id}" accept="image/*" />`}
-        </p>
-      `;
-      mobileList.appendChild(card);
-    });
-
-    // Upload handlers
-    document.querySelectorAll('input[type="file"]').forEach(input => {
-      input.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        const packageId = e.target.dataset.id;
-        if (!file || !packageId) return;
-
-        const filePath = `${currentUser.id}/${packageId}-${file.name}`;
-        const { error: uploadError } = await supabase
-          .storage
-          .from('invoices')
-          .upload(filePath, file, { upsert: true });
-
-        if (uploadError) {
-          alert("Upload failed.");
-          return;
-        }
-
-        const { data: urlData } = supabase.storage
-          .from('invoices')
-          .getPublicUrl(filePath);
-
-        const publicUrl = urlData.publicUrl;
-
-        await supabase
-          .from('packages')
-          .update({ invoice_url: publicUrl })
-          .eq('id', packageId);
-
-        alert("Invoice uploaded.");
-        loadPackages();
+      tbody.innerHTML = "";
+      data.forEach(pkg => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${pkg.tracking_number}</td>
+          <td>${pkg.merchant || "-"}</td>
+          <td>${pkg.status}</td>
+          <td>${pkg.price ? `$${pkg.price.toFixed(2)}` : "N/A"}</td>
+          <td>${new Date(pkg.created_at).toLocaleDateString()}</td>
+          <td>
+            ${pkg.invoice_url
+              ? `<a href="${pkg.invoice_url}" target="_blank">View</a>`
+              : `<input type="file" data-id="${pkg.id}" accept="image/*" />`}
+          </td>
+        `;
+        tbody.appendChild(row);
       });
+
+      // Upload handlers
+      document.querySelectorAll('input[type="file"]').forEach(input => {
+        input.addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          const packageId = e.target.dataset.id;
+          if (!file || !packageId) return;
+
+          const filePath = `${currentUser.id}/${packageId}-${file.name}`;
+          const { error: uploadError } = await supabase
+            .storage
+            .from('invoices')
+            .upload(filePath, file, { upsert: true });
+
+          if (uploadError) {
+            alert("Upload failed.");
+            return;
+          }
+
+          const { data: urlData } = supabase.storage
+            .from('invoices')
+            .getPublicUrl(filePath);
+
+          const publicUrl = urlData.publicUrl;
+
+          await supabase
+            .from('packages')
+            .update({ invoice_url: publicUrl })
+            .eq('id', packageId);
+
+          alert("Invoice uploaded.");
+          loadPackages();
+        });
+      });
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const tracking = trackingInput.value.trim();
+      const merchant = merchantInput.value.trim();
+
+      if (!tracking || !merchant) {
+        formMessage.style.color = "#e74c3c";
+        formMessage.textContent = "Please fill in both fields.";
+        return;
+      }
+
+      const { error } = await supabase.from('packages').insert([{
+        user_id: currentUser.id,
+        tracking_number: tracking,
+        merchant,
+        status: "Pre-alerted"
+      }]);
+
+      if (error) {
+        formMessage.style.color = "#e74c3c";
+        formMessage.textContent = "Error submitting.";
+        return;
+      }
+
+      formMessage.style.color = "#27ae60";
+      formMessage.textContent = "Pre-alert submitted.";
+      trackingInput.value = "";
+      merchantInput.value = "";
+      loadPackages();
     });
-  }
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const tracking = trackingInput.value.trim();
-    const merchant = merchantInput.value.trim();
+    document.getElementById("logout").addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      window.location.href = "index.html";
+    });
 
-    if (!tracking || !merchant) {
-      formMessage.style.color = "#e74c3c";
-      formMessage.textContent = "Please fill in both fields.";
-      return;
-    }
-
-    const { error } = await supabase.from('packages').insert([{
-      user_id: currentUser.id,
-      tracking_number: tracking,
-      merchant,
-      status: "Pre-alerted"
-    }]);
-
-    if (error) {
-      formMessage.style.color = "#e74c3c";
-      formMessage.textContent = "Error submitting.";
-      return;
-    }
-
-    formMessage.style.color = "#27ae60";
-    formMessage.textContent = "Pre-alert submitted.";
-    trackingInput.value = "";
-    merchantInput.value = "";
     loadPackages();
-  });
-
-  document.getElementById("logout").addEventListener("click", async () => {
-    await supabase.auth.signOut();
-    window.location.href = "index.html";
-  });
-
-  loadPackages();
-</script>
+  </script>
 </body>
 </html>
