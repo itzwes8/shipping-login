@@ -215,7 +215,7 @@
       }
 
       currentUser = user;
-      welcomeText.textContent = `Welcome, ${user.email.split('@')[0]}`;
+      welcomeText.textContent = Welcome, ${user.email.split('@')[0]};
 
       const { data, error } = await supabase
         .from('packages')
@@ -231,18 +231,18 @@
       tbody.innerHTML = "";
       data.forEach(pkg => {
         const row = document.createElement("tr");
-        row.innerHTML = `
+        row.innerHTML = 
           <td>${pkg.tracking_number}</td>
           <td>${pkg.merchant || "-"}</td>
           <td>${pkg.status}</td>
-          <td>${pkg.price ? `$${pkg.price.toFixed(2)}` : "N/A"}</td>
+          <td>${pkg.price ? $${pkg.price.toFixed(2)} : "N/A"}</td>
           <td>${new Date(pkg.created_at).toLocaleDateString()}</td>
           <td>
             ${pkg.invoice_url
-              ? `<a href="${pkg.invoice_url}" target="_blank">View</a>`
-              : `<input type="file" data-id="${pkg.id}" accept="image/*" />`}
+              ? <a href="${pkg.invoice_url}" target="_blank">View</a>
+              : <input type="file" data-id="${pkg.id}" accept="image/*" />}
           </td>
-        `;
+        ;
         tbody.appendChild(row);
       });
 
@@ -253,7 +253,7 @@
           const packageId = e.target.dataset.id;
           if (!file || !packageId) return;
 
-          const filePath = `${currentUser.id}/${packageId}-${file.name}`;
+          const filePath = ${currentUser.id}/${packageId}-${file.name};
           const { error: uploadError } = await supabase
             .storage
             .from('invoices')
@@ -282,37 +282,42 @@
     }
 
     form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const tracking = trackingInput.value.trim();
-  const merchant = merchantInput.value.trim();
+      e.preventDefault();
+      const tracking = trackingInput.value.trim();
+      const merchant = merchantInput.value.trim();
 
-  if (!tracking || !merchant) {
-    formMessage.style.color = "#e74c3c";
-    formMessage.textContent = "Please fill in both fields.";
-    return;
-  }
+      if (!tracking || !merchant) {
+        formMessage.style.color = "#e74c3c";
+        formMessage.textContent = "Please fill in both fields.";
+        return;
+      }
 
-  const { error } = await supabase.from('packages').insert([{
-    user_id: currentUser.id,
-    tracking_number: tracking,
-    merchant,
-    status: "Pre-alerted",
-    display_name: currentUser.user_metadata?.display_name || currentUser.email.split('@')[0]
-  }]);
+      const { error } = await supabase.from('packages').insert([{
+        user_id: currentUser.id,
+        tracking_number: tracking,
+        merchant,
+        status: "Pre-alerted"
+      }]);
 
-  if (error) {
-    formMessage.style.color = "#e74c3c";
-    formMessage.textContent = "Error submitting.";
-    return;
-  }
+      if (error) {
+        formMessage.style.color = "#e74c3c";
+        formMessage.textContent = "Error submitting.";
+        return;
+      }
 
-  formMessage.style.color = "#27ae60";
-  formMessage.textContent = "Pre-alert submitted.";
-  trackingInput.value = "";
-  merchantInput.value = "";
-  loadPackages();
-});
+      formMessage.style.color = "#27ae60";
+      formMessage.textContent = "Pre-alert submitted.";
+      trackingInput.value = "";
+      merchantInput.value = "";
+      loadPackages();
+    });
 
+    document.getElementById("logout").addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      window.location.href = "index.html";
+    });
+
+    loadPackages();
   </script>
 </body>
 </html>
