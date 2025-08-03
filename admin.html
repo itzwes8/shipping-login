@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard</title>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 40px 20px;
+      color: #2c3e50;
+    }
+    main {
+      max-width: 1200px;
+      margin: auto;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+    input, select {
+      padding: 10px;
+      font-size: 1rem;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 24px;
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ddd;
+    }
+    th {
+      background: #34495e;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    .status-select {
+      width: 100%;
+    }
+    .filter-group {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Admin Dashboard</h1>
+  <div class="filter-group">
+    <input type="text" id="filter-tracking" placeholder="Search tracking #" />
+    <input type="text" id="filter-email" placeholder="Search email" />
+    <select id="filter-status">
+      <option value="">All Statuses</option>
+      <option>Pre-alerted</option>
+      <option>Received</option>
+      <option>Ready for Pickup</option>
+      <option>Paid</option>
+    </select>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Email</th>
+        <th>Tracking #</th>
+        <th>Merchant</th>
+        <th>Price</th>
+        <th>Status</th>
+        <th>Invoice</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody id="admin-table-body">
+      <tr><td colspan="8" style="text-align:center;">Loading...</td></tr>
+    </tbody>
+  </table>
+</main>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+  const supabase = createClient(
+    'https://YOUR_PROJECT_ID.supabase.co',
+    'YOUR_PUBLIC_ANON_KEY'
+  );
+
+  window.supabase = supabase;
+
+  const tbody = document.getElementById("admin-table-body");
+
+  async function loadAdminData() {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const user = sessionData?.session?.user;
+
+    // Restrict access
+    if (!user || user.user_metadata?.role !== "admin") {
+      alert("Access denied. Admins only.");
+      window.location.href = "index.html";
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('packages')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error || !data) {
+      tbody.innerHTML = "<tr><td colspan='8'>Failed to load data.</td></tr>";
+      return;
+    }
+
+    window.allPackages = data; // store globally for filtering
+    renderTable(data);
+  }
+
+  function renderTable(packages) {
+    if (!packages.length) {
+      tbody.innerHTML = "<tr><td colspan='8'>No packages found.</td></tr>";
+      return;
+    }
+
+    tbody.innerHTML = "";
+
+    packages.forEach(pkg => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${pkg.display_name || "—"}</td>
+        <td>${pkg.email || "—"}</td>
+        <td>${pkg.tracking_number}</td>
+        <td>${pkg.merchant || "—"}</td>
+        <td>${pkg.price ? `$${pkg.price.toFixed(2)}` : "N/A"}</td>
+        <td>
+          <select class="status-select" data-id="${pkg.id}">
+            <option ${pkg.status === "Pre-alerted" ? "selected" : ""}>Pre-alerted</option>
+            <option ${pkg.status === "Received" ? "selected" : ""}>Received</option>
+            <option ${pkg.status === "Ready for Pickup" ? "selected" : ""}>Ready for Pickup</option>
+            <option ${pkg.status === "Paid" ? "selected" : ""}>Paid</option>
+          </select>
+        </td>
+        <td>
+          ${pkg.invoice_url
+            ? `<a href="${pkg.invoice_url}" target="_blank">View</a>`
+            : "Not uploaded"}
+        </td>
+        <td>${new Date(pkg.created_at).toLocaleDateString()}</td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    document.querySelectorAll(".status-select").forEach(select => {
+      select.addEventListener("change", async (e) => {
+        const newStatus = e.target.value;
+        const id = e.target.dataset.id;
+
+        const { error } = await supabase
+          .from("packages")
+          .update({ status: newStatus })
+          .eq("id", id);
+
+        if (error) {
+          alert("Failed to update status.");
+          console.error(error);
+        } else {
+          alert("Status updated.");
+          loadAdminData();
+        }
+      });
+    });
+  }
+
+  function applyFilters() {
+    const track = document.getElementById("filter-tracking").value.toLowerCase();
+    const email = document.getElementById("filter-email").value.toLowerCase();
+    const status = document.getElementById("filter-status").value;
+
+    const filtered = window.allPackages.filter(pkg => {
+      return (
+        pkg.tracking_number.toLowerCase().includes(track) &&
+        (!pkg.email || pkg.email.toLowerCase().includes(email)) &&
+        (status === "" || pkg.status === status)
+      );
+    });
+
+    renderTable(filtered);
+  }
+
+  document.getElementById("filter-tracking").addEventListener("input", applyFilters);
+  document.getElementById("filter-email").addEventListener("input", applyFilters);
+  document.getElementById("filter-status").addEventListener("change", applyFilters);
+
+  loadAdminData();
+</script>
+</body>
+</html>
