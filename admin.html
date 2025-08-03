@@ -25,27 +25,12 @@
       margin-bottom: 20px;
     }
     input, select {
-      padding: 10px;
+      padding: 8px 10px;
       font-size: 1rem;
       margin: 8px 0;
       border-radius: 8px;
       border: 1px solid #ccc;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 24px;
-    }
-    th, td {
-      padding: 12px;
-      border: 1px solid #ddd;
-    }
-    th {
-      background: #34495e;
-      color: white;
-    }
-    tr:nth-child(even) {
-      background: #f9f9f9;
+      min-width: 100px;
     }
     .filter-group {
       display: flex;
@@ -56,28 +41,73 @@
     .status-select {
       width: 100%;
     }
+    .price-input {
+      width: 100px;
+      text-align: right;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      width: 100%;
+    }
+    table {
+      width: 100%;
+      min-width: 900px;
+      border-collapse: collapse;
+      margin-top: 24px;
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ddd;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th {
+      background: #34495e;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    #logout {
+      margin-bottom: 20px;
+      background-color: #e74c3c;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 6px 12px rgba(231, 76, 60, 0.3);
+    }
+    #logout:hover {
+      background-color: #c0392b;
+    }
+
+    button.save-price-btn {
+      background-color: #2980b9;
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-left: 8px;
+      transition: background-color 0.3s ease;
+    }
+    button.save-price-btn:hover {
+      background-color: #1c5980;
+    }
   </style>
 </head>
 <body>
 <main>
   <h1>Admin Dashboard</h1>
 
-  <button id="logout" style="
-  margin-bottom: 20px;
-  background-color: #e74c3c;
-  color: white;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 6px 12px rgba(231, 76, 60, 0.3);
-">
-  Log Out
-</button>
+  <button id="logout">Log Out</button>
 
-
-  <!-- Filters (Tracking #, Display Name, Status) -->
+  <!-- Filters -->
   <div class="filter-group">
     <input type="text" id="filter-tracking" placeholder="Search tracking #" />
     <input type="text" id="filter-display" placeholder="Search user name" />
@@ -90,38 +120,39 @@
     </select>
   </div>
 
-  <!-- Package Table -->
-  <table>
-    <thead>
-      <tr>
-        <th>User</th>
-        <th>Tracking #</th>
-        <th>Merchant</th>
-        <th>Price</th>
-        <th>Status</th>
-        <th>Invoice</th>
-        <th>Date</th>
-      </tr>
-    </thead>
-    <tbody id="admin-table-body">
-      <tr><td colspan="7" style="text-align:center;">Loading...</td></tr>
-    </tbody>
-  </table>
+  <!-- Scrollable table wrapper -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Tracking #</th>
+          <th>Merchant</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th>Invoice</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="admin-table-body">
+        <tr><td colspan="7" style="text-align:center;">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
 </main>
 
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  // Initialize Supabase client
   const supabase = createClient(
     'https://erultpckbvoalsaqmuuq.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydWx0cGNrYnZvYWxzYXFtdXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MzM5MjcsImV4cCI6MjA2OTUwOTkyN30.mB5Cverh79nwg2YMqYkc5c-Mpa397leZKEY4y_0Nja4' // Replace this with your actual anon key
+    'KEY' // Replace this with your actual anon key
   );
+
   window.supabase = supabase;
 
   const tbody = document.getElementById("admin-table-body");
 
-  // Load and protect admin dashboard
   async function loadAdminData() {
     const { data: sessionData } = await supabase.auth.getSession();
     const user = sessionData?.session?.user;
@@ -146,7 +177,6 @@
     renderTable(data);
   }
 
-  // Render table rows
   function renderTable(packages) {
     if (!packages.length) {
       tbody.innerHTML = "<tr><td colspan='7'>No packages found.</td></tr>";
@@ -157,11 +187,18 @@
 
     packages.forEach(pkg => {
       const row = document.createElement("tr");
+
+      // Format price with two decimals or empty string if null/undefined
+      const priceVal = (pkg.price !== null && pkg.price !== undefined) ? pkg.price.toFixed(2) : "";
+
       row.innerHTML = `
         <td>${pkg.display_name || "—"}</td>
         <td>${pkg.tracking_number}</td>
         <td>${pkg.merchant || "—"}</td>
-        <td>${pkg.price ? `$${pkg.price.toFixed(2)}` : "N/A"}</td>
+        <td>
+          <input type="number" step="0.01" min="0" class="price-input" data-id="${pkg.id}" value="${priceVal}" />
+          <button class="save-price-btn" data-id="${pkg.id}">Save</button>
+        </td>
         <td>
           <select class="status-select" data-id="${pkg.id}">
             <option ${pkg.status === "Pre-alerted" ? "selected" : ""}>Pre-alerted</option>
@@ -172,7 +209,7 @@
         </td>
         <td>
           ${pkg.invoice_url
-            ? `<a href="${pkg.invoice_url}" target="_blank">View</a>`
+            ? `<a href="${pkg.invoice_url}" target="_blank" rel="noopener noreferrer">View</a>`
             : "Not uploaded"}
         </td>
         <td>${new Date(pkg.created_at).toLocaleDateString()}</td>
@@ -180,7 +217,7 @@
       tbody.appendChild(row);
     });
 
-    // Attach status update handlers
+    // Attach event listeners for status selects
     document.querySelectorAll(".status-select").forEach(select => {
       select.addEventListener("change", async (e) => {
         const newStatus = e.target.value;
@@ -200,9 +237,35 @@
         }
       });
     });
+
+    // Attach event listeners for save price buttons
+    document.querySelectorAll(".save-price-btn").forEach(button => {
+      button.addEventListener("click", async (e) => {
+        const id = e.target.dataset.id;
+        const input = document.querySelector(`input.price-input[data-id="${id}"]`);
+        const newPrice = parseFloat(input.value);
+
+        if (isNaN(newPrice) || newPrice < 0) {
+          alert("Please enter a valid non-negative price.");
+          return;
+        }
+
+        const { error } = await supabase
+          .from("packages")
+          .update({ price: newPrice })
+          .eq("id", id);
+
+        if (error) {
+          alert("Failed to update price.");
+          console.error("Price update error:", error);
+        } else {
+          alert("Price updated.");
+          loadAdminData();
+        }
+      });
+    });
   }
 
-  // Apply filters when user types/selects
   function applyFilters() {
     const tracking = document.getElementById("filter-tracking").value.toLowerCase();
     const displayName = document.getElementById("filter-display").value.toLowerCase();
@@ -219,17 +282,19 @@
     renderTable(filtered);
   }
 
-  // Event listeners
+  // Filter events
   document.getElementById("filter-tracking").addEventListener("input", applyFilters);
   document.getElementById("filter-display").addEventListener("input", applyFilters);
   document.getElementById("filter-status").addEventListener("change", applyFilters);
 
-  loadAdminData();
+  // Logout
   document.getElementById("logout").addEventListener("click", async () => {
-  await supabase.auth.signOut();
-  window.location.href = "index.html"; // or login page
-});
+    await supabase.auth.signOut();
+    window.location.href = "index.html";
+  });
 
+  // Load initial data
+  loadAdminData();
 </script>
 </body>
 </html>
