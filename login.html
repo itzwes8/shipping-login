@@ -37,6 +37,22 @@
       box-shadow: 0 30px 50px rgb(0 0 0 / 0.25);
     }
 
+    /* Logo container styling */
+    .logo-container {
+      margin-bottom: 32px;
+      /* optional max height for the logo */
+      max-height: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .logo-container img {
+      max-height: 60px;
+      object-fit: contain;
+      width: auto;
+    }
+
     h2 {
       margin: 0 0 28px 0;
       font-weight: 700;
@@ -136,6 +152,12 @@
 </head>
 <body>
   <div class="container" role="main" aria-labelledby="login-title">
+
+    <!-- Logo placeholder: replace src with your logo path -->
+    <div class="logo-container">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTUYvWnk3CROvzg-bPfKCZ1OtXGQRuX1oMu7A&s" alt="Transcend Logistics Co. Logo" />
+    </div>
+
     <h2 id="login-title">Log In</h2>
     <input type="email" id="email" placeholder="Email" aria-label="Email" autocomplete="email" required />
     <input type="password" id="password" placeholder="Password" aria-label="Password" autocomplete="current-password" required />
