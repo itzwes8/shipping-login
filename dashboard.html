@@ -282,42 +282,37 @@
     }
 
     form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const tracking = trackingInput.value.trim();
-      const merchant = merchantInput.value.trim();
+  e.preventDefault();
+  const tracking = trackingInput.value.trim();
+  const merchant = merchantInput.value.trim();
 
-      if (!tracking || !merchant) {
-        formMessage.style.color = "#e74c3c";
-        formMessage.textContent = "Please fill in both fields.";
-        return;
-      }
+  if (!tracking || !merchant) {
+    formMessage.style.color = "#e74c3c";
+    formMessage.textContent = "Please fill in both fields.";
+    return;
+  }
 
-      const { error } = await supabase.from('packages').insert([{
-        user_id: currentUser.id,
-        tracking_number: tracking,
-        merchant,
-        status: "Pre-alerted"
-      }]);
+  const { error } = await supabase.from('packages').insert([{
+    user_id: currentUser.id,
+    tracking_number: tracking,
+    merchant,
+    status: "Pre-alerted",
+    display_name: currentUser.user_metadata?.display_name || currentUser.email.split('@')[0]
+  }]);
 
-      if (error) {
-        formMessage.style.color = "#e74c3c";
-        formMessage.textContent = "Error submitting.";
-        return;
-      }
+  if (error) {
+    formMessage.style.color = "#e74c3c";
+    formMessage.textContent = "Error submitting.";
+    return;
+  }
 
-      formMessage.style.color = "#27ae60";
-      formMessage.textContent = "Pre-alert submitted.";
-      trackingInput.value = "";
-      merchantInput.value = "";
-      loadPackages();
-    });
+  formMessage.style.color = "#27ae60";
+  formMessage.textContent = "Pre-alert submitted.";
+  trackingInput.value = "";
+  merchantInput.value = "";
+  loadPackages();
+});
 
-    document.getElementById("logout").addEventListener("click", async () => {
-      await supabase.auth.signOut();
-      window.location.href = "index.html";
-    });
-
-    loadPackages();
   </script>
 </body>
 </html>
