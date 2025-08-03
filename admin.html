@@ -47,23 +47,25 @@
     tr:nth-child(even) {
       background: #f9f9f9;
     }
-    .status-select {
-      width: 100%;
-    }
     .filter-group {
       display: flex;
       gap: 16px;
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
+    .status-select {
+      width: 100%;
+    }
   </style>
 </head>
 <body>
 <main>
   <h1>Admin Dashboard</h1>
+
+  <!-- Filters (Tracking #, Display Name, Status) -->
   <div class="filter-group">
     <input type="text" id="filter-tracking" placeholder="Search tracking #" />
-    <input type="text" id="filter-email" placeholder="Search email" />
+    <input type="text" id="filter-display" placeholder="Search user name" />
     <select id="filter-status">
       <option value="">All Statuses</option>
       <option>Pre-alerted</option>
@@ -72,11 +74,12 @@
       <option>Paid</option>
     </select>
   </div>
+
+  <!-- Package Table -->
   <table>
     <thead>
       <tr>
         <th>User</th>
-        <th>Email</th>
         <th>Tracking #</th>
         <th>Merchant</th>
         <th>Price</th>
@@ -86,7 +89,7 @@
       </tr>
     </thead>
     <tbody id="admin-table-body">
-      <tr><td colspan="8" style="text-align:center;">Loading...</td></tr>
+      <tr><td colspan="7" style="text-align:center;">Loading...</td></tr>
     </tbody>
   </table>
 </main>
@@ -94,20 +97,20 @@
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
+  // Initialize Supabase client
   const supabase = createClient(
     'https://erultpckbvoalsaqmuuq.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydWx0cGNrYnZvYWxzYXFtdXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MzM5MjcsImV4cCI6MjA2OTUwOTkyN30.mB5Cverh79nwg2YMqYkc5c-Mpa397leZKEY4y_0Nja4'
+    'YOUR_SUPABASE_PUBLIC_ANON_KEY' // Replace this with your actual anon key
   );
-
   window.supabase = supabase;
 
   const tbody = document.getElementById("admin-table-body");
 
+  // Load and protect admin dashboard
   async function loadAdminData() {
     const { data: sessionData } = await supabase.auth.getSession();
     const user = sessionData?.session?.user;
 
-    // Restrict access
     if (!user || user.user_metadata?.role !== "admin") {
       alert("Access denied. Admins only.");
       window.location.href = "index.html";
@@ -115,22 +118,23 @@
     }
 
     const { data, error } = await supabase
-      .from('packages')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .from("packages")
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (error || !data) {
-      tbody.innerHTML = "<tr><td colspan='8'>Failed to load data.</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='7'>Failed to load data.</td></tr>";
       return;
     }
 
-    window.allPackages = data; // store globally for filtering
+    window.allPackages = data;
     renderTable(data);
   }
 
+  // Render table rows
   function renderTable(packages) {
     if (!packages.length) {
-      tbody.innerHTML = "<tr><td colspan='8'>No packages found.</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='7'>No packages found.</td></tr>";
       return;
     }
 
@@ -140,7 +144,6 @@
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${pkg.display_name || "—"}</td>
-        <td>${pkg.email || "—"}</td>
         <td>${pkg.tracking_number}</td>
         <td>${pkg.merchant || "—"}</td>
         <td>${pkg.price ? `$${pkg.price.toFixed(2)}` : "N/A"}</td>
@@ -162,6 +165,7 @@
       tbody.appendChild(row);
     });
 
+    // Attach status update handlers
     document.querySelectorAll(".status-select").forEach(select => {
       select.addEventListener("change", async (e) => {
         const newStatus = e.target.value;
@@ -174,7 +178,7 @@
 
         if (error) {
           alert("Failed to update status.");
-          console.error(error);
+          console.error("Update error:", error);
         } else {
           alert("Status updated.");
           loadAdminData();
@@ -183,15 +187,16 @@
     });
   }
 
+  // Apply filters when user types/selects
   function applyFilters() {
-    const track = document.getElementById("filter-tracking").value.toLowerCase();
-    const email = document.getElementById("filter-email").value.toLowerCase();
+    const tracking = document.getElementById("filter-tracking").value.toLowerCase();
+    const displayName = document.getElementById("filter-display").value.toLowerCase();
     const status = document.getElementById("filter-status").value;
 
     const filtered = window.allPackages.filter(pkg => {
       return (
-        pkg.tracking_number.toLowerCase().includes(track) &&
-        (!pkg.email || pkg.email.toLowerCase().includes(email)) &&
+        pkg.tracking_number.toLowerCase().includes(tracking) &&
+        (pkg.display_name || "").toLowerCase().includes(displayName) &&
         (status === "" || pkg.status === status)
       );
     });
@@ -199,8 +204,9 @@
     renderTable(filtered);
   }
 
+  // Event listeners
   document.getElementById("filter-tracking").addEventListener("input", applyFilters);
-  document.getElementById("filter-email").addEventListener("input", applyFilters);
+  document.getElementById("filter-display").addEventListener("input", applyFilters);
   document.getElementById("filter-status").addEventListener("change", applyFilters);
 
   loadAdminData();
