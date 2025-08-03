@@ -150,54 +150,61 @@
   </div>
 
   <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    const supabaseUrl = 'https://erultpckbvoalsaqmuuq.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydWx0cGNrYnZvYWxzYXFtdXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MzM5MjcsImV4cCI6MjA2OTUwOTkyN30.mB5Cverh79nwg2YMqYkc5c-Mpa397leZKEY4y_0Nja4';
+  const supabaseUrl = 'https://erultpckbvoalsaqmuuq.supabase.co';
+  const supabaseKey = 'KEY'; // replace with your actual anon/public key
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const message = document.getElementById('message');
+  const loginBtn = document.getElementById('loginBtn');
 
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const message = document.getElementById('message');
-    const loginBtn = document.getElementById('loginBtn');
+  loginBtn.addEventListener('click', async () => {
+    message.textContent = "";
+    message.className = "";
 
-    loginBtn.addEventListener('click', async () => {
-      message.textContent = "";
-      message.className = "";
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
 
-      const email = emailInput.value.trim();
-      const password = passwordInput.value.trim();
+    if (!email || !password) {
+      message.textContent = "Please fill in all fields.";
+      message.classList.add("error");
+      return;
+    }
 
-      if (!email || !password) {
-        message.textContent = "Please fill in all fields.";
-        message.classList.add("error");
-        return;
-      }
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Logging in...";
 
-      loginBtn.disabled = true;
-      loginBtn.textContent = "Logging in...";
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Log In";
 
-      loginBtn.disabled = false;
-      loginBtn.textContent = "Log In";
+    if (error) {
+      message.textContent = error.message.includes("Invalid login credentials")
+        ? "Email not registered or password is incorrect."
+        : "Login failed: " + error.message;
+      message.classList.add("error");
+    } else {
+      const session = data.session;
+      const user = session?.user;
+      const role = user?.user_metadata?.role;
 
-      if (error) {
-        if (error.message.includes("Invalid login credentials")) {
-          message.textContent = "Email not registered or password is incorrect.";
+      message.textContent = "Login successful! Redirecting...";
+      message.classList.add("success");
+
+      setTimeout(() => {
+        if (role === 'admin') {
+          window.location.href = "/admin.html";
         } else {
-          message.textContent = "Login failed: " + error.message;
+          window.location.href = "/dashboard.html";
         }
-        message.classList.add("error");
-      } else {
-        message.textContent = "Login successful! Redirecting...";
-        message.classList.add("success");
-        setTimeout(() => {
-          window.location.href = "/dashboard.html"; // Update with your dashboard URL
-        }, 1500);
-      }
-    });
-  </script>
+      }, 1200);
+    }
+  });
+</script>
+
 </body>
 </html>
