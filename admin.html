@@ -62,6 +62,21 @@
 <main>
   <h1>Admin Dashboard</h1>
 
+  <button id="logout" style="
+  margin-bottom: 20px;
+  background-color: #e74c3c;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(231, 76, 60, 0.3);
+">
+  Log Out
+</button>
+
+
   <!-- Filters (Tracking #, Display Name, Status) -->
   <div class="filter-group">
     <input type="text" id="filter-tracking" placeholder="Search tracking #" />
@@ -210,6 +225,11 @@
   document.getElementById("filter-status").addEventListener("change", applyFilters);
 
   loadAdminData();
+  document.getElementById("logout").addEventListener("click", async () => {
+  await supabase.auth.signOut();
+  window.location.href = "index.html"; // or login page
+});
+
 </script>
 </body>
 </html>
